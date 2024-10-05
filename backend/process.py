@@ -2,6 +2,10 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
+# TODO: Have not chosen type for clothing yet
+def edit_frame_for_clothing(frame, clothes):
+    return frame
+
 # Initialize MediaPipe Pose solution
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=False, model_complexity=1)
