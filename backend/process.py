@@ -120,10 +120,8 @@ def overlay_and_skew_pants_full_coverage(frame, landmarks, pants_img, width_fact
 
 def data_url_to_mat(data_url):
     # Step 1: Extract the base64 data from the data URL
-    print(data_url)
     
-    base64_data = data_url.split("data:image/png;base64,")[0]
-    print(base64_data)
+    base64_data = data_url.split("data:image/png;base64,")[1]
     
     # Step 2: Decode the base64 data to binary data
     binary_data = base64.b64decode(base64_data)
@@ -141,8 +139,8 @@ def mat_to_data_url(mat):
     _, buffer = cv2.imencode(".png", mat)
     
     # Step 2: Encode the binary data to base64
-    base64_data = base64.b64encode(buffer)
-    
+    base64_data = base64.b64encode(buffer).decode('utf-8')
+
     # Step 3: Combine the base64 data with the data URL prefix
     data_url = f"data:image/png;base64,{base64_data}"
     
@@ -181,8 +179,11 @@ def perform_frame_manipulation(frame: cv2.typing.MatLike, clothes):
         
         # Skew and stretch the pants to fit the body (hips and ankles) with full lower body coverage
         frame = overlay_and_skew_pants_full_coverage(frame, landmarks, pants_img, width_factor=5, height_factor=1.2)
+
     else:
         print("No pose landmarks detected.")
+        
+
     return frame
 
 
@@ -199,9 +200,6 @@ def visualize_pose_landmarks_with_full_coverage_tshirt_and_pants():
             continue
         
         perform_frame_manipulation(frame, None)
-
-        # Show the frame with skewed oversized t-shirt and pants
-        cv2.imshow('Live Pose Detection with Full Coverage T-shirt and Pants', frame)
 
         # Break the loop when 'q' is pressed
         if cv2.waitKey(5) & 0xFF == ord('q'):

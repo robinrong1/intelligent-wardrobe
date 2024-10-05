@@ -1,59 +1,45 @@
-from flask import Flask, request, jsonify
-from flask_socketio import SocketIO, emit
+from process import edit_frame_for_clothing, data_url_to_mat
+from flask import Flask, render_template, Response, request
 from flask_cors import CORS
-from process import edit_frame_for_clothing, data_url_to_mat, mat_to_data_url
+from queue import Queue
+import cv2
 
 app = Flask(__name__)
-CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", transports=["websocket"])
+CORS(app)  # Add this line to enable CORS
 
-@socketio.on('connect')
-def connect():
-    print("Connected!")
-
-@socketio.on('process_frame')
-def process_frame(data):
-    print("Reached!")
-    data_frame = data['frame']
-    
-    video_frame = edit_frame_for_clothing(data_url_to_mat(data_frame), None)
-    
-    emit('video_frame', { "url": mat_to_data_url(video_frame) }, to=request.sid)
-    print("Finished!")
-
-@socketio.on('hello')
-def hello(data):
-    print(data['message'])
-    emit('hello', { "message": "Hello, Client!" }, to=request.sid)    
-
-@socketio.on('select_clothing')
-def select_clothing(data):
-    pass
-    
-@socketio.on('prompt_suggestions')
-def prompt_suggestions(data):
+def select_clothing(sid, data):
     pass
 
-@app.route('/process_frame', methods=['POST'])
-def process_frame():
-    print("Reached!")
-    data = request.json()
-    data_frame = data['frame']
-    
-    video_frame = edit_frame_for_clothing(data_url_to_mat(data_frame), None)
-    
-    return jsonify({ "url": mat_to_data_url(video_frame) })
-    
-
-@app.route('/hello')
-def hello():
-    return jsonify({ "message": "Hello, Client!" })    
-
-def select_clothing(data):
-    pass
-    
-def prompt_suggestions(data):
+def prompt_suggestions(sid, data):
     pass
 
-if __name__ == '__main__':
-    socketio.run(app)
+def generate_frames():
+    # Open a video capture using the webcam
+    cap = cv2.VideoCapture(0)  # '0' means the default webcam
+    
+    while cap.isOpened():
+        success, frame = cap.read()  # Read a frame from the webcam
+        
+        if not success:
+            print("Ignoring empty camera frame.")
+            continue
+        
+        new_frame = edit_frame_for_clothing(frame, None)
+        img_str = cv2.imencode('.jpg', new_frame)[1].tostring()
+        
+        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + img_str + b'\r\n')
+
+        # Break the loop when 'q' is pressed
+        if cv2.waitKey(5) & 0xFF == ord('q'):
+            break
+
+    cap.release()  # Release the webcam resource
+    cv2.destroyAllWindows()  # Close all OpenCV windows
+    
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)
