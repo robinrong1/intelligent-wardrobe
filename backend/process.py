@@ -1,10 +1,11 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import base64
 
 # TODO: Have not chosen type for clothing yet
 def edit_frame_for_clothing(frame, clothes):
-    return frame
+    return perform_frame_manipulation(frame, clothes)
 
 # Initialize MediaPipe Pose solution
 mp_pose = mp.solutions.pose
@@ -117,6 +118,74 @@ def overlay_and_skew_pants_full_coverage(frame, landmarks, pants_img, width_fact
 
     return frame
 
+def data_url_to_mat(data_url):
+    # Step 1: Extract the base64 data from the data URL
+    print(data_url)
+    
+    base64_data = data_url.split("data:image/png;base64,")[0]
+    print(base64_data)
+    
+    # Step 2: Decode the base64 data to binary data
+    binary_data = base64.b64decode(base64_data)
+    
+    # Step 3: Convert the binary data to a NumPy array
+    np_array = np.frombuffer(binary_data, dtype=np.uint8)
+    
+    # Step 4: Decode the NumPy array to an OpenCV image
+    mat = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+    
+    return mat
+
+def mat_to_data_url(mat):
+    # Step 1: Convert the OpenCV image to binary data
+    _, buffer = cv2.imencode(".png", mat)
+    
+    # Step 2: Encode the binary data to base64
+    base64_data = base64.b64encode(buffer)
+    
+    # Step 3: Combine the base64 data with the data URL prefix
+    data_url = f"data:image/png;base64,{base64_data}"
+    
+    return data_url
+
+def perform_frame_manipulation(frame: cv2.typing.MatLike, clothes):
+    # Convert the image color to RGB (required by MediaPipe)
+    image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    # Process the image to detect pose landmarks
+    results = pose.process(image_rgb)
+    
+    # Draw landmarks on the image if they exist
+    if results.pose_landmarks:
+        # Draw landmarks directly on the frame using MediaPipe's drawing utility
+        mp_drawing = mp.solutions.drawing_utils
+        mp_drawing_styles = mp.solutions.drawing_styles
+        
+        # Draw the pose landmarks on the frame (body nodes - blue and orange)
+        mp_drawing.draw_landmarks(
+            frame,
+            results.pose_landmarks,
+            mp_pose.POSE_CONNECTIONS,  # Draw connections between landmarks
+            landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
+        )
+
+        # Get pose landmarks
+        landmarks = []
+        for landmark in results.pose_landmarks.landmark:
+            h, w, _ = frame.shape
+            x, y = int(landmark.x * w), int(landmark.y * h)
+            landmarks.append((x, y))
+        
+        # Skew and stretch the t-shirt to fit the body (shoulders and hips) with full upper body coverage
+        frame = overlay_and_skew_tshirt_full_coverage(frame, landmarks, tshirt_img, width_factor=2.5, height_factor=1)
+        
+        # Skew and stretch the pants to fit the body (hips and ankles) with full lower body coverage
+        frame = overlay_and_skew_pants_full_coverage(frame, landmarks, pants_img, width_factor=5, height_factor=1.2)
+    else:
+        print("No pose landmarks detected.")
+    return frame
+
+
 # Update the visualization function to skew/stretch both the t-shirt and pants for full coverage
 def visualize_pose_landmarks_with_full_coverage_tshirt_and_pants():
     # Open a video capture using the webcam
@@ -128,39 +197,8 @@ def visualize_pose_landmarks_with_full_coverage_tshirt_and_pants():
         if not success:
             print("Ignoring empty camera frame.")
             continue
-
-        # Convert the image color to RGB (required by MediaPipe)
-        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Process the image to detect pose landmarks
-        results = pose.process(image_rgb)
         
-        # Draw landmarks on the image if they exist
-        if results.pose_landmarks:
-            # Draw landmarks directly on the frame using MediaPipe's drawing utility
-            mp_drawing = mp.solutions.drawing_utils
-            mp_drawing_styles = mp.solutions.drawing_styles
-            
-            # Draw the pose landmarks on the frame (body nodes - blue and orange)
-            mp_drawing.draw_landmarks(
-                frame,
-                results.pose_landmarks,
-                mp_pose.POSE_CONNECTIONS,  # Draw connections between landmarks
-                landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
-            )
-
-            # Get pose landmarks
-            landmarks = []
-            for landmark in results.pose_landmarks.landmark:
-                h, w, _ = frame.shape
-                x, y = int(landmark.x * w), int(landmark.y * h)
-                landmarks.append((x, y))
-            
-            # Skew and stretch the t-shirt to fit the body (shoulders and hips) with full upper body coverage
-            frame = overlay_and_skew_tshirt_full_coverage(frame, landmarks, tshirt_img, width_factor=2.5, height_factor=1)
-            
-            # Skew and stretch the pants to fit the body (hips and ankles) with full lower body coverage
-            frame = overlay_and_skew_pants_full_coverage(frame, landmarks, pants_img, width_factor=5, height_factor=1.2)
+        perform_frame_manipulation(frame, None)
 
         # Show the frame with skewed oversized t-shirt and pants
         cv2.imshow('Live Pose Detection with Full Coverage T-shirt and Pants', frame)
@@ -172,8 +210,9 @@ def visualize_pose_landmarks_with_full_coverage_tshirt_and_pants():
     cap.release()  # Release the webcam resource
     cv2.destroyAllWindows()  # Close all OpenCV windows
 
-# Run the live visualization with skewed oversized t-shirt and pants
-visualize_pose_landmarks_with_full_coverage_tshirt_and_pants()
+if __name__ == "__main__":
+    # Run the live visualization with skewed oversized t-shirt and pants
+    visualize_pose_landmarks_with_full_coverage_tshirt_and_pants()
 
-# Cleanup: Close the MediaPipe instance when done
-pose.close()
+    # Cleanup: Close the MediaPipe instance when done
+    pose.close()

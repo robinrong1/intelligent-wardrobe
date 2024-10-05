@@ -1,19 +1,14 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react";
-import { io, Socket } from "socket.io-client";
 
 export default function WardrobePage() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const hiddenCanvasRef = useRef<HTMLCanvasElement>(null);
-    const [socket, setSocket] = useState<Socket>();
+
 
     useEffect(() => {
-        // Initialize socket connection
-        const socket = io('http://localhost:5000'); // Flask server URL
-        setSocket(socket);
-
         // Capture video feed from user's camera
         async function startVideoStream() {
             try {
@@ -21,21 +16,28 @@ export default function WardrobePage() {
                 videoRef.current!.srcObject = stream;
 
                 // Send video frames to the backend
-                const sendVideoFrames = () => {
+                const sendVideoFrames = async () => {
                     const canvas = hiddenCanvasRef.current;
                     const context = canvas!.getContext('2d');
                     context!.drawImage(videoRef.current!, 0, 0, canvas!.width, canvas!.height);
 
                     // Convert frame to base64
-                    const frame = canvas!.toDataURL('image/png', 1);
-                    if (socket) {
-                        socket.emit('process_frame', { frame }); // Emit the frame to the backend
-                    }
-                    receiveProcessedFrames(frame);
+                    const frame = canvas!.toDataURL('image/jpeg', 1);
+
+                    const response = await fetch("http://localhost:5000/process_frame", {
+                        method: 'POST',
+                        body: JSON.stringify({ frame }),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                    });
+
+                    const data = await response.json();
+                    receiveProcessedFrames(data.url);
                 };
 
                 videoRef.current!.addEventListener('play', () => {
-                    setInterval(sendVideoFrames, 50); // Send frames at 10 FPS
+                    setInterval(sendVideoFrames, 3000); // Send frames at 10 FPS
                 });
             } catch (error) {
                 console.error('Error accessing camera:', error);
@@ -46,7 +48,6 @@ export default function WardrobePage() {
 
         // Receive the processed frames from the server
         async function receiveProcessedFrames(processedFrame: string) {
-            //socket.on('processed_frame', (processedFrame) => {
             const image = new Image();
             image.src = processedFrame; // Set the processed frame URL
             image.onload = () => {
@@ -55,21 +56,17 @@ export default function WardrobePage() {
             };
         }
 
-        if (socket) {
-            socket.on('video_frame', (frame) => {
-                receiveProcessedFrames(frame);
-            })
-        }
-
         // });
         // }
-
-        return () => {
-            if (socket) {
-                socket.disconnect();
-            }
-        };
     }, []);
+
+    useEffect(() => {
+        setInterval(async () => {
+            const response = await fetch('http://localhost:5000/hello');;
+            const data = await response.json();
+            console.log(data);
+        }, 2000)
+    }, [])
 
     return (<div className="flex-1 flex flex-row">
         <div className="basis-1/6 bg-black p-4 space-y-4 flex flex-col">

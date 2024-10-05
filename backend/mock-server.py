@@ -8,6 +8,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 @socketio.on('process_frame')
 def process_frame(data):
     video_frame = edit_frame_for_clothing(data["frame"], None)
+    
     emit('video_frame', video_frame, to=request.sid)
     
 @socketio.on('select_clothing')
