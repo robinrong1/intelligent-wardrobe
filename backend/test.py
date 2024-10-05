@@ -1,4 +1,4 @@
-from process import edit_frame_for_clothes
+from backend.process_frame import edit_frame_for_clothes
 import cv2
 
 # Initialize video capture
