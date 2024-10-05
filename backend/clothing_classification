@@ -19,9 +19,9 @@ training_data = training_data.cache()
 testing_data = testing_data.cache()
 
 
-for image, label in training_data.take(1):
-  break
-image = image.numpy().reshape((28,28))
+# for image, label in training_data.take(1):
+#   break
+# image = image.numpy().reshape((28,28))
 
 import matplotlib.pyplot as plt
 
