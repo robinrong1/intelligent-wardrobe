@@ -7,8 +7,8 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=False, model_complexity=1)
 
 # Load t-shirt and pants images (transparent PNGs)
-tshirt_img = cv2.imread('./clothes/blue.png', cv2.IMREAD_UNCHANGED)  # Ensure it's a transparent PNG
-pants_img = cv2.imread('./clothes/pant.png', cv2.IMREAD_UNCHANGED)  # Ensure it's a transparent PNG
+tshirt_img = cv2.imread('./Shirt/blue.png', cv2.IMREAD_UNCHANGED)  # Ensure it's a transparent PNG
+pants_img = cv2.imread('./Pant/pant2.png', cv2.IMREAD_UNCHANGED)  # Ensure it's a transparent PNG
 
 # Helper function to overlay and skew/stretch the t-shirt on the frame with full upper body coverage
 def overlay_and_skew_tshirt_full_coverage(frame, landmarks, tshirt_img, width_factor=2.7, height_factor=1):
