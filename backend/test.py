@@ -16,3 +16,10 @@ while True:
     new_frame = edit_frame_for_clothes(frame, None)
 
     cv2.imshow('frame', new_frame)
+    
+    if cv2.waitKey(20) & 0xFF == ord('q'):
+        break
+
+# When everything done, release the capture
+capture.release()
+cv2.destroyAllWindows()
