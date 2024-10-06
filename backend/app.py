@@ -26,7 +26,7 @@ def list_clothing():
 
 @app.route('/clothes/<file>')
 def clothes():
-    return send_from_directory('Clothes', f'${request.view_args['file']}.png')
+    return send_from_directory('Clothes', f'${request.view_args["file"]}.png')
 
 @app.route('/add-clothes', methods=['POST'])
 def add_clothes():
@@ -74,8 +74,8 @@ def prompt():
     
     list = []
     for i in range(3):
-        response = prompt_user(message)
-        for i in response.split(', '):
+        response0 = prompt_user(message)
+        for i in response0.split(', '):
             if i not in list:
                 list.append(i)
     

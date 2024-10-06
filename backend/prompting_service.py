@@ -25,7 +25,7 @@ def prompt_user(message):
         {"role": "assistant", "content":f'Assume the clothes that my wardrobe contains is the following: {", ".join(clothes)}. Respond only with a list of the clothes that would be appropriate for the occasion in CSV format.'},
         {"role": "user", "content": message}
     ]
-    )
+    )["response"]
 
 if __name__ == '__main__':
     for i in range(100):

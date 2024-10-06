@@ -1,6 +1,7 @@
 "use client"
 
 import { Allura, Libre_Bodoni } from 'next/font/google'
+import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const allura = Allura({ weight: '400', subsets: ['latin'] })
@@ -13,8 +14,54 @@ export default function WardrobePage() {
     const [lowerIndex, setLowerIndex] = useState(0)
     const [message, setMessage] = useState<string | null>(null) // State to handle success message
 
+    const [sUpper, setSUpper] = useState<string[]>([])
+    const [sLower, setSLower] = useState<string[]>([])
+    
+    const [sUpperIndex, setSUpperIndex] = useState(0)
+    const [sLowerIndex, setSLowerIndex] = useState(0)
+
+    const searchParams = useSearchParams();
+    const rawSuggest = searchParams.get("suggest")
+
     useEffect(() => {
-        fetchClothes()
+        async function init() {
+            const data: string[] = await fetch("http://localhost:5000/list-clothing")
+                .then(res => res.json())
+                .then(data => data.clothes)
+
+            const uppers = []
+            const lowers = []
+            for (const cloth of data) {
+                if (cloth.toLowerCase().endsWith("pant") || cloth.toLowerCase().endsWith("short") || cloth.toLowerCase().endsWith("jean") || cloth.toLowerCase().endsWith("pants")) {
+                    lowers.push(cloth)
+                } else {
+                    uppers.push(cloth)
+                }
+            }
+            console.log(uppers)
+            console.log(lowers)
+            setUpper(uppers)
+            setLower(lowers)
+
+            if (rawSuggest) {
+            
+            const sUppers = []
+            const sLowers = []
+            for (const cloth of rawSuggest.split(', ')) {
+                if (cloth.toLowerCase().endsWith("pant") || cloth.toLowerCase().endsWith("short") || cloth.toLowerCase().endsWith("jean") || cloth.toLowerCase().endsWith("pants")) {
+                    sLowers.push(cloth)
+                } else {
+                    sUppers.push(cloth)
+                }
+            }
+            console.log(sUppers)
+            console.log(sLowers)
+            setSUpper(sUppers)
+            setSLower(sLowers)
+        }
+        }
+
+        init()
     }, [])
 
     // Function to fetch the wardrobe from the server
@@ -83,6 +130,24 @@ export default function WardrobePage() {
         }
     }, [upperIndex, lowerIndex, upper, lower])
 
+    
+    useEffect(() => {
+        async function update() {
+            await fetch("http://localhost:5000/select-clothing", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    top: sUpper[sUpperIndex],
+                    bottom: sLower[sLowerIndex]
+                })
+            })
+        }
+
+        update()
+    }, [sUpperIndex, sLowerIndex, sUpper, sLower])
+
     return (
         <div className="flex-1 flex flex-row bg-[#654B70] relative">
             {/* Display message when clothing is uploaded */}
@@ -98,9 +163,15 @@ export default function WardrobePage() {
                     <div className="flex-1"></div>
                     <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setUpperIndex((upperIndex + 1) % upper.length)}>Top</div>
                     <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setLowerIndex((lowerIndex + 1) % lower.length)}>Bottom</div>
-
-                    {/* Upload button wrapped in label, file input is hidden */}
-                    <label className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center cursor-pointer">
+                    {
+                        rawSuggest && (
+                            <>
+                            <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setSUpperIndex(upperIndex + 1 % upper.length)}>Suggested Top</div>
+                            <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setSLowerIndex(lowerIndex + 1 % lower.length)}>Suggested Bottom</div>
+                    </>)
+                    }
+                      {/* Upload button wrapped in label, file input is hidden */}
+                      <label className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center cursor-pointer">
                         Upload
                         <input
                             type="file"
@@ -108,7 +179,6 @@ export default function WardrobePage() {
                             onChange={handleUpload}
                         />
                     </label>
-
                     <div className="flex-1"></div>
                 </div>
             </div>
