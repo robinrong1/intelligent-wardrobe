@@ -30,9 +30,14 @@ def clothes():
 
 @app.route('/add-clothes', methods=['POST'])
 def add_clothes():
-    file = request.files['file']
-    file.save(f'./Clothes/{file.filename}')
-    return Response(status=200)
+    file = request.files['file']  # Get the uploaded file
+    if file:
+        # Save the file in the 'Clothes' folder
+        file.save(os.path.join('./Clothes', file.filename))
+        # Return the filename so the frontend can update its state
+        return jsonify({'status': 'success', 'filename': file.filename}), 200
+    return jsonify({'status': 'error', 'message': 'No file uploaded'}), 400
+
 
 def generate_frames():
     # Open a video capture using the webcam
