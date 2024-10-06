@@ -1,6 +1,5 @@
 "use client"; // Enable client-side interactivity
 import background from "@/app/img/homepageimg.png";
-import {Input} from "@nextui-org/input";
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
@@ -37,6 +36,8 @@ export default function PromptPage() {
                 <input
           type="text"
           placeholder="What's the occasion?"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
           className="py-4 px-6 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-700 bg-white w-80"         
        />
                 

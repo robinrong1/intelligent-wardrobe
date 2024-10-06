@@ -4,6 +4,10 @@ import React from 'react';
 import { useRouter } from 'next/navigation'; // Import the Next.js router
 import background from "@/app/img/homepageimg.png"; // Adjust path if needed
 
+import {  Libre_Bodoni } from 'next/font/google'
+
+const libreBodoni = Libre_Bodoni({ weight: '400', subsets: ['latin'] })
+
 export default function Home() {
     const router = useRouter(); // Initialize the Next.js router
 
@@ -19,13 +23,7 @@ export default function Home() {
     return (
         <div style={styles.container}>
             {/* Inline style tag to include Libre Bodoni and Libre Franklin fonts */}
-            <style>
-                {`
-                    @import url('https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;700&display=swap');
-                    @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&display=swap');
-                `}
-            </style>
-            <div style={styles.panel}>
+            <div style={styles.panel} className={libreBodoni.className}>
                 <h1 style={styles.heading}>FashioNova</h1>
                 <h1 style={styles.text}>
                     Having a tough time finding clothes to wear for the day? 
