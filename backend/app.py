@@ -75,9 +75,13 @@ def prompt():
     list = []
     for i in range(3):
         response0 = prompt_user(message)
+
+        print("Response:", response0)
+
         for i in response0.split(', '):
             if i not in list:
                 list.append(i)
+
     
     return jsonify({ 'clothes': list })
 

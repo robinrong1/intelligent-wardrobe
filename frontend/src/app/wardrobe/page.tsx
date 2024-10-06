@@ -25,7 +25,13 @@ export default function WardrobePage() {
     const searchParams = useSearchParams();
     const rawSuggest = searchParams.get("suggest")
 
+    const [loaded, setLoaded] = useState(false)
+    const [selectedTop, setSelectedTop] = useState<string>()
+    const [selectedBottom, setSelectedBottom] = useState<string>()
+
+
     useEffect(() => {
+
         async function init() {
             const data: string[] = await fetch("http://localhost:5000/list-clothing")
                 .then(res => res.json())
@@ -40,16 +46,24 @@ export default function WardrobePage() {
                     uppers.push(cloth)
                 }
             }
-            console.log(uppers)
-            console.log(lowers)
-            setUpper(uppers)
-            setLower(lowers)
 
             if (rawSuggest) {
+                
+        const response = await fetch("http://localhost:5000/prompt", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: rawSuggest} )
+        })
+
+        const body = await response.json();
+
+        const clothes = body.clothes;
             
             const sUppers = []
             const sLowers = []
-            for (const cloth of rawSuggest.split(', ')) {
+            for (const cloth of clothes) {
                 if (cloth.toLowerCase().endsWith("pant") || cloth.toLowerCase().endsWith("short") || cloth.toLowerCase().endsWith("jean") || cloth.toLowerCase().endsWith("pants")) {
                     sLowers.push(cloth)
                 } else {
@@ -60,7 +74,13 @@ export default function WardrobePage() {
             console.log(sLowers)
             setSUpper(sUppers)
             setSLower(sLowers)
+        } else {
+            console.log(uppers)
+            console.log(lowers)
+            setUpper(uppers)
+            setLower(lowers)
         }
+        setLoaded(true)
         }
 
         init()
@@ -121,35 +141,25 @@ export default function WardrobePage() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    top: upper[upperIndex],
-                    bottom: lower[lowerIndex]
-                })
-            })
-        }
-
-        if (upper.length && lower.length) {
-            update()
-        }
-    }, [upperIndex, lowerIndex, upper, lower])
-
-    
-    useEffect(() => {
-        async function update() {
-            await fetch("http://localhost:5000/select-clothing", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    top: sUpper[sUpperIndex],
-                    bottom: sLower[sLowerIndex]
+                    top: selectedTop,
+                    bottom: selectedBottom
                 })
             })
         }
 
         update()
-    }, [sUpperIndex, sLowerIndex, sUpper, sLower])
+    }, [selectedTop, selectedBottom])
 
+    useEffect(() => {
+        setSelectedTop(upper[upperIndex])
+        setSelectedBottom(lower[lowerIndex])
+    }, [upperIndex, lowerIndex, upper, lower])
+
+    useEffect(() => {
+        setSelectedTop(sUpper[sUpperIndex])
+        setSelectedBottom(sLower[sLowerIndex])
+    }, [sUpperIndex, sLowerIndex, sUpper, sLower])
+    
     return (
         <div className="flex-1 flex flex-row bg-[#654B70] relative">
             {/* Display message when clothing is uploaded */}
@@ -163,15 +173,17 @@ export default function WardrobePage() {
                 <div className={"text-white text-bold text-5xl " + libreBodoni.className}>Wardrobe</div>
                 <div className="flex flex-col flex-1 bg-[#F1D7EF] rounded-2xl p-5 space-y-14">
                     <div className="flex-1"></div>
-                    <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setUpperIndex(upperIndex + 1 % upper.length)}>Top</div>
+                    <div className="w-full h-100 px-4 py-2 text-white rounded-xl bg-[#654B70] font-bold text-center" onClick={() => router.push('/')}>Back to Home</div>
+                    {rawSuggest && 
+                    <div className="w-full h-100 px-4 py-2 text-white rounded-xl bg-[#654B70] font-bold text-center" onClick={() => router.push('/prompt')}>Back to Prompt</div>
+                    }<div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setUpperIndex(upperIndex + 1 % upper.length)}>Top</div>
                     <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setLowerIndex(lowerIndex + 1 % lower.length)}>Bottom</div>
-                    <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => router.push('/prompt')}>Back to Prompt</div>
                     
                     {
                         rawSuggest && (
                             <>
-                            <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setSUpperIndex(upperIndex + 1 % upper.length)}>Suggested Top</div>
-                            <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setSLowerIndex(lowerIndex + 1 % lower.length)}>Suggested Bottom</div>
+                            <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setSUpperIndex(sUpperIndex + 1 % sUpper.length)}>Suggested Top</div>
+                            <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setSLowerIndex(sLowerIndex + 1 % sLower.length)}>Suggested Bottom</div>
                     </>)
                     }
                       {/* Upload button wrapped in label, file input is hidden */}
@@ -194,11 +206,12 @@ export default function WardrobePage() {
                     <div className="flex-1"></div>
                 </div>
                 <div className="bg-gray-400 rounded-xl basis-5/6 p-2 border-[#B26AAB] border-8 flex flex-col">
+                {loaded && 
                     <img
                         src="http://localhost:5000/video_feed"
                         alt="Video Stream"
                         className="w-full"
-                    />
+                    />}
                 </div>
             </div>
         </div>
