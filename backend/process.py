@@ -16,8 +16,9 @@ tshirt_img = cv2.imread('./clothes/blue shirt.png', cv2.IMREAD_UNCHANGED)  # Ens
 pants_img = cv2.imread('./clothes/blue jean.png', cv2.IMREAD_UNCHANGED)  # Ensure it's a transparent PNG
 
 def set_clothing(data):
-    top = data['top']
-    bottom = data['bottom']
+    global tshirt_img, pants_img
+    top = data.get('top')
+    bottom = data.get('bottom')
     
     tshirt_img = cv2.imread(f'./clothes/{top}.png', cv2.IMREAD_UNCHANGED)
     pants_img = cv2.imread(f'./clothes/{bottom}.png', cv2.IMREAD_UNCHANGED)
@@ -190,7 +191,7 @@ def perform_frame_manipulation(frame: cv2.typing.MatLike, clothes):
 
     else:
         print("No pose landmarks detected.")
-        
+
 
     return frame
 
