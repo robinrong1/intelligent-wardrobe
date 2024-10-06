@@ -12,18 +12,7 @@ export default function PromptPage() {
     const router = useRouter(); // Initialize the Next.js router
    
     const submitHandler = async () => {
-        const response = await fetch("http://localhost:5000/prompt", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message: text} )
-        })
-
-        const body = await response.json();
-
-        const clothes = body.clothes;
-        router.push('/wardrobe?suggest=' + clothes.join(', '));
+        router.push('/wardrobe?suggest=' + text);
     }
 
     return (<div style={styles.container}>
@@ -82,7 +71,7 @@ const Buttons: React.FC<ButtonsProps> = ({ handleButtonClick }) => {
     };
 
     return (
-        <div style={buttonStyles.buttonContainer}>
+        <div style={buttonStyles.buttonContainer} className="mt-5">
             
             <button style={buttonStyles.button2} onClick={() => handleButtonClick(2)}>
                 Prompt Now
