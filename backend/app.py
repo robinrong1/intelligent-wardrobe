@@ -12,6 +12,7 @@ CORS(app)  # Add this line to enable CORS
 @app.route('/select-clothing', methods=['POST'])
 def select_clothing():
     data = request.json
+    print(data)
     set_clothing(data)
     return Response(status=200)
 

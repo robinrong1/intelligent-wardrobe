@@ -22,12 +22,14 @@ export default function WardrobePage() {
             const uppers = []
             const lowers = []
             for (const cloth of data) {
-                if (cloth.endsWith("pant") || cloth.endsWith("short") || cloth.endsWith("jean")) {
+                if (cloth.toLowerCase().endsWith("pant") || cloth.toLowerCase().endsWith("short") || cloth.toLowerCase().endsWith("jean") || cloth.toLowerCase().endsWith("pants")) {
                     lowers.push(cloth)
                 } else {
                     uppers.push(cloth)
                 }
             }
+            console.log(uppers)
+            console.log(lowers)
             setUpper(uppers)
             setLower(lowers)
         }
@@ -37,7 +39,7 @@ export default function WardrobePage() {
 
     useEffect(() => {
         async function update() {
-            await fetch("http://localhost:5000/change-clothing", {
+            await fetch("http://localhost:5000/select-clothing", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'
