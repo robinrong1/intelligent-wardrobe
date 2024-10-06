@@ -1,17 +1,37 @@
-from process import edit_frame_for_clothing, data_url_to_mat
-from flask import Flask, render_template, Response, request
+from process import edit_frame_for_clothing, set_clothing
+from prompting_service import prompt_user
+from flask import Flask, render_template, Response, request, jsonify, send_from_directory
 from flask_cors import CORS
 from queue import Queue
+import os
 import cv2
 
 app = Flask(__name__)
 CORS(app)  # Add this line to enable CORS
 
-def select_clothing(sid, data):
-    pass
+@app.route('/select-clothing', methods=['POST'])
+def select_clothing():
+    data = request.json
+    set_clothing(data)
+    return Response(status=200)
 
-def prompt_suggestions(sid, data):
-    pass
+@app.route('/list-clothing')
+def list_clothing():
+    wardrobe = os.listdir('./Clothes')
+    clothes = []
+    for i, item in enumerate(wardrobe):
+        clothes.append(item.split('.')[0])
+    return jsonify({ 'clothes': clothes })
+
+@app.route('/clothes/<file>')
+def clothes():
+    return send_from_directory('Clothes', f'${request.view_args['file']}.png')
+
+@app.route('/add-clothes', methods=['POST'])
+def add_clothes():
+    file = request.files['file']
+    file.save(f'./Clothes/{file.filename}')
+    return Response(status=200)
 
 def generate_frames():
     # Open a video capture using the webcam
@@ -40,6 +60,20 @@ def generate_frames():
 @app.route('/video_feed')
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/prompt', methods=['POST'])
+def prompt():
+    data = request.json
+    message = data['message']
+    
+    list = []
+    for i in range(3):
+        response = prompt_user(message)
+        for i in response.split(', '):
+            if i not in list:
+                list.append(i)
+    
+    return jsonify({ 'clothes': list })
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
