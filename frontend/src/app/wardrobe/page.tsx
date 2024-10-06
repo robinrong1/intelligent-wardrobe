@@ -3,11 +3,13 @@
 import { Allura, Libre_Bodoni } from 'next/font/google'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'; // Import the Next.js router
 
 const allura = Allura({ weight: '400', subsets: ['latin'] })
 const libreBodoni = Libre_Bodoni({ weight: '400', subsets: ['latin'] })
 
 export default function WardrobePage() {
+    const router = useRouter(); // Initialize the Next.js router
     const [upper, setUpper] = useState<string[]>([])
     const [lower, setLower] = useState<string[]>([])
     const [upperIndex, setUpperIndex] = useState(0)
@@ -161,8 +163,14 @@ export default function WardrobePage() {
                 <div className={"text-white text-bold text-5xl " + libreBodoni.className}>Wardrobe</div>
                 <div className="flex flex-col flex-1 bg-[#F1D7EF] rounded-2xl p-5 space-y-14">
                     <div className="flex-1"></div>
+<<<<<<< Updated upstream
                     <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setUpperIndex((upperIndex + 1) % upper.length)}>Top</div>
                     <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setLowerIndex((lowerIndex + 1) % lower.length)}>Bottom</div>
+=======
+                    <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setUpperIndex(upperIndex + 1 % upper.length)}>Top</div>
+                    <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => setLowerIndex(lowerIndex + 1 % lower.length)}>Bottom</div>
+                    <div className="w-full h-100 px-4 py-2 bg-white rounded-xl text-[#654B70] font-bold text-center" onClick={() => router.push('/prompt')}>Back to Prompt</div>
+>>>>>>> Stashed changes
                     {
                         rawSuggest && (
                             <>
